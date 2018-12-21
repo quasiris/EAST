@@ -41,7 +41,7 @@ model_path = os.path.join(checkpoint_path, os.path.basename(ckpt_state.model_che
 logger.info('Restore from {}'.format(model_path))
 saver.restore(sess, model_path)
 
-@functools.lru_cache(maxsize=1)
+# @functools.lru_cache(maxsize=1)
 def get_host_info():
     ret = {}
     with open('/proc/cpuinfo') as f:
@@ -56,7 +56,7 @@ def get_host_info():
     return ret
 
 
-@functools.lru_cache(maxsize=100)
+# @functools.lru_cache(maxsize=100)
 def get_predictor(checkpoint_path):
 
     def predictor(img):
