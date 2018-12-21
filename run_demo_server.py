@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# python3 FUCKS UP JSON, as usual
 
 import os
 
@@ -12,6 +13,8 @@ import json
 import functools
 import logging
 import collections
+import io
+from flask import render_template_string
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -197,14 +200,20 @@ checkpoint_path = './east_icdar2015_resnet_v1_50_rbox'
 @app.route('/', methods=['POST'])
 def index_post():
     global predictor
-    import io
     bio = io.BytesIO()
     request.files['image'].save(bio)
     img = cv2.imdecode(np.frombuffer(bio.getvalue(), dtype='uint8'), 1)
     rst = get_predictor(checkpoint_path)(img)
 
     save_result(img, rst)
-    return render_template('index.html', session_id=rst['session_id'])
+    print(request.args)
+    if request.args.get("json"):
+        return render_template_string('{{ what }}', what=json.dumps(rst))
+    if request.args.get("id"):
+        return render_template_string('{{ what }}', what=rst['session_id'])
+    else:
+        return render_template('index.html', session_id=rst['session_id'])
+
 
 
 def main():
