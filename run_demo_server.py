@@ -16,6 +16,8 @@ import collections
 import io
 from flask import render_template_string
 
+checkpoint_path = './east_icdar2015_resnet_v1_50_rbox'
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -192,9 +194,6 @@ def save_result(img, rst):
     rst['session_id'] = session_id
     return rst
 
-
-
-checkpoint_path = './east_icdar2015_resnet_v1_50_rbox'
 
 
 @app.route('/', methods=['POST'])
