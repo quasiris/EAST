@@ -19,6 +19,27 @@ from flask import render_template_string
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+logger.info('loading model')
+import tensorflow as tf
+import model
+from icdar import restore_rectangle
+import lanms
+from eval import resize_image, sort_poly, detect
+
+input_images = tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input_images')
+global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
+
+f_score, f_geometry = model.model(input_images, is_training=False)
+
+variable_averages = tf.train.ExponentialMovingAverage(0.997, global_step)
+saver = tf.train.Saver(variable_averages.variables_to_restore())
+
+sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+
+ckpt_state = tf.train.get_checkpoint_state(checkpoint_path)
+model_path = os.path.join(checkpoint_path, os.path.basename(ckpt_state.model_checkpoint_path))
+logger.info('Restore from {}'.format(model_path))
+saver.restore(sess, model_path)
 
 @functools.lru_cache(maxsize=1)
 def get_host_info():
@@ -37,27 +58,6 @@ def get_host_info():
 
 @functools.lru_cache(maxsize=100)
 def get_predictor(checkpoint_path):
-    logger.info('loading model')
-    import tensorflow as tf
-    import model
-    from icdar import restore_rectangle
-    import lanms
-    from eval import resize_image, sort_poly, detect
-
-    input_images = tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input_images')
-    global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
-
-    f_score, f_geometry = model.model(input_images, is_training=False)
-
-    variable_averages = tf.train.ExponentialMovingAverage(0.997, global_step)
-    saver = tf.train.Saver(variable_averages.variables_to_restore())
-
-    sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-
-    ckpt_state = tf.train.get_checkpoint_state(checkpoint_path)
-    model_path = os.path.join(checkpoint_path, os.path.basename(ckpt_state.model_checkpoint_path))
-    logger.info('Restore from {}'.format(model_path))
-    saver.restore(sess, model_path)
 
     def predictor(img):
         """
